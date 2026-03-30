@@ -306,22 +306,22 @@ function renderCandleChart(item) {
         {
           type: 'line', label: 'BB Superior',
           data: ts.map((t, i) => ({x: t, y: upper[i]})),
-          borderColor: 'rgba(171,71,188,0.5)', borderWidth: 1,
-          pointRadius: 0, fill: '+1', backgroundColor: 'rgba(171,71,188,0.04)',
+          borderColor: 'rgba(196,77,255,0.5)', borderWidth: 1,
+          pointRadius: 0, fill: '+1', backgroundColor: 'rgba(196,77,255,0.05)',
           tension: 0.3, order: 4,
         },
         {
           type: 'line', label: 'BB Média',
           data: ts.map((t, i) => ({x: t, y: middle[i]})),
-          borderColor: 'rgba(171,71,188,0.6)', borderWidth: 1,
+          borderColor: 'rgba(196,77,255,0.65)', borderWidth: 1,
           pointRadius: 0, borderDash: [4, 4],
           tension: 0.3, order: 3,
         },
         {
           type: 'line', label: 'BB Inferior',
           data: ts.map((t, i) => ({x: t, y: lower[i]})),
-          borderColor: 'rgba(171,71,188,0.5)', borderWidth: 1,
-          pointRadius: 0, fill: '-1', backgroundColor: 'rgba(171,71,188,0.04)',
+          borderColor: 'rgba(196,77,255,0.5)', borderWidth: 1,
+          pointRadius: 0, fill: '-1', backgroundColor: 'rgba(196,77,255,0.05)',
           tension: 0.3, order: 4,
         },
         {
@@ -333,7 +333,7 @@ function renderCandleChart(item) {
         {
           type: 'line', label: 'EMA 21',
           data: ts.map((t, i) => ({x: t, y: ema21Data[i]})),
-          borderColor: '#00e5ff', borderWidth: 1.5,
+          borderColor: '#e040fb', borderWidth: 1.5,
           pointRadius: 0, tension: 0.3, order: 2,
         },
         {
@@ -349,22 +349,22 @@ function renderCandleChart(item) {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: {
-          labels: { color: '#64748b', boxWidth: 16, font: { size: 11 } }
+          labels: { color: '#8a6fb0', boxWidth: 16, font: { size: 11 } }
         },
         tooltip: {
-          backgroundColor: '#111827',
-          borderColor: '#1e3050',
+          backgroundColor: '#160d21',
+          borderColor: '#3d1f6e',
           borderWidth: 1,
-          titleColor: '#e2e8f0',
-          bodyColor: '#94a3b8',
+          titleColor: '#f0e8ff',
+          bodyColor: '#8a6fb0',
         }
       },
       scales: {
         x: {
           type: 'time',
           time: { unit: 'hour', displayFormats: { hour: 'dd/MM HH:mm' } },
-          grid: { color: 'rgba(30,48,80,0.5)' },
-          ticks: { color: '#64748b', maxTicksLimit: 8 },
+          grid: { color: 'rgba(61,31,110,0.5)' },
+          ticks: { color: '#8a6fb0', maxTicksLimit: 8 },
         },
         y: {
           position: 'right',
@@ -395,7 +395,7 @@ function renderRsiChart(item) {
         {
           label: 'RSI (14)',
           data: ts.map((t, i) => ({ x: t, y: rsiValues[i] })),
-          borderColor: '#ab47bc',
+          borderColor: '#c44dff',
           borderWidth: 1.5,
           pointRadius: 0,
           tension: 0.3,
@@ -431,14 +431,14 @@ function renderRsiChart(item) {
         x: {
           type: 'time',
           time: { unit: 'hour', displayFormats: { hour: 'HH:mm' } },
-          grid: { color: 'rgba(30,48,80,0.3)' },
-          ticks: { color: '#64748b', maxTicksLimit: 6, font: { size: 10 } }
+          grid: { color: 'rgba(61,31,110,0.3)' },
+          ticks: { color: '#8a6fb0', maxTicksLimit: 6, font: { size: 10 } }
         },
         y: {
           position: 'right',
           min: 0, max: 100,
-          grid: { color: 'rgba(30,48,80,0.3)' },
-          ticks: { color: '#64748b', font: { size: 10 } }
+          grid: { color: 'rgba(61,31,110,0.3)' },
+          ticks: { color: '#8a6fb0', font: { size: 10 } }
         }
       }
     }
@@ -472,7 +472,7 @@ function renderVolMacdChart(item) {
         {
           type: 'line', label: 'MACD',
           data: ts.map((t, i) => ({ x: t, y: macd[i] })),
-          borderColor: '#00e5ff', borderWidth: 1.5,
+          borderColor: '#c44dff', borderWidth: 1.5,
           pointRadius: 0, tension: 0.3,
           yAxisID: 'yMacd', order: 1,
         },
@@ -495,7 +495,7 @@ function renderVolMacdChart(item) {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#64748b', boxWidth: 12, font: { size: 11 } } },
+        legend: { labels: { color: '#8a6fb0', boxWidth: 12, font: { size: 11 } } },
         tooltip: {
           backgroundColor: '#111827', borderColor: '#1e3050', borderWidth: 1,
           titleColor: '#e2e8f0', bodyColor: '#94a3b8',
@@ -510,13 +510,13 @@ function renderVolMacdChart(item) {
         },
         yVol: {
           position: 'left',
-          grid: { color: 'rgba(30,48,80,0.3)' },
-          ticks: { color: '#64748b', callback: v => formatVol(v), font: { size: 10 } },
+          grid: { color: 'rgba(61,31,110,0.3)' },
+          ticks: { color: '#8a6fb0', callback: v => formatVol(v), font: { size: 10 } },
         },
         yMacd: {
           position: 'right',
           grid: { display: false },
-          ticks: { color: '#64748b', font: { size: 10 } },
+          ticks: { color: '#8a6fb0', font: { size: 10 } },
         }
       }
     }
@@ -619,7 +619,7 @@ function renderLiquidationChart(data) {
       scales: {
         x: {
           stacked: false,
-          grid: { color: 'rgba(30,48,80,0.4)' },
+          grid: { color: 'rgba(61,31,110,0.4)' },
           ticks: {
             color: '#64748b',
             font: { size: 10 },
@@ -628,11 +628,11 @@ function renderLiquidationChart(data) {
         },
         y: {
           stacked: false,
-          grid: { color: 'rgba(30,48,80,0.2)' },
+          grid: { color: 'rgba(61,31,110,0.2)' },
           ticks: {
             color: (ctx) => {
-              if (ctx.index === closestIdx) return '#ffd740';
-              return '#475569';
+              if (ctx.index === closestIdx) return '#c44dff';
+              return '#5a3a7a';
             },
             font: (ctx) => ({
               size: ctx.index === closestIdx ? 12 : 10,
