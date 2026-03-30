@@ -134,6 +134,16 @@ function renderDashboard(item) {
         <div class="vol-wrapper"><canvas id="volChart"></canvas></div>
       </div>
     </div>
+    <div class="full-row">
+      <div class="card" id="liqRankingCard">
+        <div class="card-title"><span>🏆</span> Ranking de Liquidações — Top 10 Tokens (24h)</div>
+        <div id="liqRankingContent"><div class="loading-overlay"><div class="spinner"></div></div></div>
+      </div>
+      <div class="card" id="newsCard">
+        <div class="card-title"><span>📰</span> Notícias Crypto — Últimas Horas</div>
+        <div id="newsContent"><div class="loading-overlay"><div class="spinner"></div></div></div>
+      </div>
+    </div>
   `;
   main.appendChild(dash);
 
@@ -142,6 +152,8 @@ function renderDashboard(item) {
   renderRsiChart(item);
   renderVolMacdChart(item);
   loadLiquidations(item.symbol);
+  loadLiquidationRanking();
+  loadNews();
 }
 
 // ====================================================
@@ -700,6 +712,159 @@ function calcBollinger(data, period = 20, stdDev = 2) {
     lower.push(avg - stdDev * sd);
   }
   return { upper, middle, lower };
+}
+
+// ====================================================
+//  Liquidation Ranking
+// ====================================================
+async function loadLiquidationRanking() {
+  const container = document.getElementById('liqRankingContent');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/liquidations_ranking');
+    const data = await res.json();
+    renderLiquidationRanking(data, container);
+  } catch (e) {
+    container.innerHTML = '<p style="color:var(--text-muted)">Erro ao carregar ranking</p>';
+  }
+}
+
+function renderLiquidationRanking(data, container) {
+  if (!data.length) { container.innerHTML = '<p>Sem dados</p>'; return; }
+
+  const totalLong  = data.reduce((a, d) => a + d.liq_24h_long, 0);
+  const totalShort = data.reduce((a, d) => a + d.liq_24h_short, 0);
+  const totalAll   = totalLong + totalShort;
+  const maxLiq     = Math.max(...data.map(d => d.liq_24h_total));
+
+  let html = `
+    <div class="liq-summary-row">
+      <div class="liq-summary-box">
+        <div class="liq-summary-label">Total Liquidado (24h)</div>
+        <div class="liq-summary-value" style="color:var(--accent)">${formatBig(totalAll)}</div>
+      </div>
+      <div class="liq-summary-box">
+        <div class="liq-summary-label">Longs Liquidados</div>
+        <div class="liq-summary-value" style="color:var(--red)">${formatBig(totalLong)}</div>
+      </div>
+      <div class="liq-summary-box">
+        <div class="liq-summary-label">Shorts Liquidados</div>
+        <div class="liq-summary-value" style="color:var(--green)">${formatBig(totalShort)}</div>
+      </div>
+      <div class="liq-summary-box">
+        <div class="liq-summary-label">Ratio Long/Short</div>
+        <div class="liq-summary-value" style="color:${totalLong > totalShort ? 'var(--red)' : 'var(--green)'}">
+          ${(totalLong / Math.max(totalShort, 1)).toFixed(2)}
+        </div>
+      </div>
+    </div>
+    <div class="liq-table-wrap">
+    <table class="liq-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Token</th>
+          <th>Preço</th>
+          <th>24h</th>
+          <th>Liq. Long</th>
+          <th>Liq. Short</th>
+          <th>Total Liq.</th>
+          <th>Barra</th>
+          <th>Open Interest</th>
+          <th>Volatilidade</th>
+          <th>Suporte</th>
+          <th>Resistência</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  data.forEach((d, i) => {
+    const chgClass = d.change_pct >= 0 ? 'up' : 'down';
+    const longPct  = maxLiq > 0 ? (d.liq_24h_long / maxLiq * 100) : 0;
+    const shortPct = maxLiq > 0 ? (d.liq_24h_short / maxLiq * 100) : 0;
+
+    html += `
+      <tr>
+        <td class="liq-rank ${i < 3 ? 'top3' : ''}">${i + 1}</td>
+        <td>
+          <div class="liq-symbol-cell">
+            <div>
+              <div class="liq-symbol-name">${d.symbol.replace('USDT','')}</div>
+              <div class="liq-symbol-price">${formatPrice(d.price)}</div>
+            </div>
+          </div>
+        </td>
+        <td>${formatPrice(d.price)}</td>
+        <td style="color:var(--${chgClass === 'up' ? 'green' : 'red'});font-weight:600">${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}%</td>
+        <td style="color:var(--red);font-weight:600">${formatBig(d.liq_24h_long)}</td>
+        <td style="color:var(--green);font-weight:600">${formatBig(d.liq_24h_short)}</td>
+        <td class="liq-total-value">${formatBig(d.liq_24h_total)}</td>
+        <td style="min-width:120px">
+          <div class="liq-bar-cell">
+            <div class="liq-bar long" style="width:${longPct}%"></div>
+            <div class="liq-bar short" style="width:${shortPct}%"></div>
+          </div>
+        </td>
+        <td>${formatBig(d.oi_value_usd)}</td>
+        <td style="color:${d.volatility_24h > 3 ? 'var(--orange)' : 'var(--text-muted)'};font-weight:600">${d.volatility_24h.toFixed(2)}%</td>
+        <td style="color:var(--green)">${formatPrice(d.support)}</td>
+        <td style="color:var(--red)">${formatPrice(d.resistance)}</td>
+      </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+// ====================================================
+//  News
+// ====================================================
+async function loadNews() {
+  const container = document.getElementById('newsContent');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/news');
+    const data = await res.json();
+    renderNews(data.news, container);
+  } catch (e) {
+    container.innerHTML = '<p style="color:var(--text-muted)">Erro ao carregar notícias</p>';
+  }
+}
+
+function renderNews(news, container) {
+  if (!news || !news.length) { container.innerHTML = '<p>Sem notícias</p>'; return; }
+
+  const timeAgo = (dateStr) => {
+    const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (diff < 60) return 'agora';
+    if (diff < 3600) return `${Math.floor(diff/60)}min`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h`;
+    return `${Math.floor(diff/86400)}d`;
+  };
+
+  let html = '<div class="news-list">';
+  news.forEach(n => {
+    const sentClass = n.sentiment > 0 ? 'positive' : n.sentiment < 0 ? 'negative' : 'neutral_';
+    const badgeClass = n.sentiment > 0 ? 'pos' : n.sentiment < 0 ? 'neg' : 'neu';
+    const sentIcon = n.sentiment > 0 ? '▲ Positivo' : n.sentiment < 0 ? '▼ Negativo' : '● Neutro';
+    const tagsHtml = n.currencies.map(c => `<span class="news-tag">${c}</span>`).join('');
+
+    html += `
+      <div class="news-item">
+        <div class="news-sentiment ${sentClass}"></div>
+        <div class="news-body">
+          <div class="news-title">${n.url !== '#' ? `<a href="${n.url}" target="_blank" rel="noopener">${n.title}</a>` : n.title}</div>
+          <div class="news-meta">
+            <span class="news-source">${n.source}</span>
+            <span>${timeAgo(n.published_at)}</span>
+            <div class="news-tags">${tagsHtml}</div>
+            <span class="news-sentiment-badge ${badgeClass}">${sentIcon}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // ====================================================

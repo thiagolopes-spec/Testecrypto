@@ -11,7 +11,8 @@ CORS(app)
 BINANCE_BASE = "https://api.binance.com/api/v3"
 BINANCE_FUTURES = "https://fapi.binance.com/fapi/v1"
 
-SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
+SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
+           "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "DOTUSDT", "LINKUSDT"]
 
 DEMO_PRICES = {
     "BTCUSDT": 83200.0,
@@ -19,6 +20,11 @@ DEMO_PRICES = {
     "BNBUSDT": 598.0,
     "SOLUSDT": 124.5,
     "XRPUSDT": 2.14,
+    "ADAUSDT": 0.68,
+    "DOGEUSDT": 0.165,
+    "AVAXUSDT": 34.5,
+    "DOTUSDT": 6.12,
+    "LINKUSDT": 13.8,
 }
 
 # ====================================================
@@ -27,7 +33,8 @@ DEMO_PRICES = {
 def generate_demo_klines(symbol, limit=100):
     base = DEMO_PRICES[symbol]
     now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
-    trends = {"BTCUSDT": 0.0003, "ETHUSDT": -0.0002, "BNBUSDT": 0.0001, "SOLUSDT": 0.0004, "XRPUSDT": -0.0001}
+    trends = {"BTCUSDT": 0.0003, "ETHUSDT": -0.0002, "BNBUSDT": 0.0001, "SOLUSDT": 0.0004, "XRPUSDT": -0.0001,
+               "ADAUSDT": 0.0002, "DOGEUSDT": 0.0005, "AVAXUSDT": -0.0003, "DOTUSDT": 0.0001, "LINKUSDT": 0.0003}
     drift = trends.get(symbol, 0)
     volatility = base * 0.012
     rows = []
@@ -54,7 +61,8 @@ def generate_demo_klines(symbol, limit=100):
 
 def generate_demo_ticker(symbol):
     base = DEMO_PRICES[symbol]
-    changes = {"BTCUSDT": 2.34, "ETHUSDT": -3.12, "BNBUSDT": 1.05, "SOLUSDT": 5.67, "XRPUSDT": -1.88}
+    changes = {"BTCUSDT": 2.34, "ETHUSDT": -3.12, "BNBUSDT": 1.05, "SOLUSDT": 5.67, "XRPUSDT": -1.88,
+                "ADAUSDT": 3.21, "DOGEUSDT": 8.44, "AVAXUSDT": -2.15, "DOTUSDT": 1.77, "LINKUSDT": 4.02}
     chg = changes.get(symbol, 0)
     return {"price": base, "change_pct": chg, "volume": base * 18000, "high": base * 1.03, "low": base * 0.97}
 
@@ -119,7 +127,8 @@ def fetch_open_interest(symbol):
         r.raise_for_status()
         return float(r.json().get("openInterest", 0))
     except Exception:
-        base_oi = {"BTCUSDT": 85000, "ETHUSDT": 1200000, "BNBUSDT": 450000, "SOLUSDT": 2800000, "XRPUSDT": 150000000}
+        base_oi = {"BTCUSDT": 85000, "ETHUSDT": 1200000, "BNBUSDT": 450000, "SOLUSDT": 2800000, "XRPUSDT": 150000000,
+                    "ADAUSDT": 52000000, "DOGEUSDT": 85000000, "AVAXUSDT": 3200000, "DOTUSDT": 12000000, "LINKUSDT": 8500000}
         return base_oi.get(symbol, 100000)
 
 # ====================================================
@@ -357,6 +366,191 @@ def market_dominance():
             "market_cap_change_24h": 1.24,
             "demo": True,
         })
+
+@app.route("/api/liquidations_ranking")
+def liquidation_ranking():
+    """Top 10 tokens with liquidation estimates based on volume, OI and volatility."""
+    ranking = []
+    for sym in SYMBOLS:
+        ticker = fetch_ticker(sym)
+        if not ticker:
+            continue
+        candles = fetch_klines(sym, 50)
+        if not candles or len(candles) < 10:
+            continue
+        oi = fetch_open_interest(sym)
+        price = ticker["price"]
+
+        # Estimate liquidation values from volume and volatility
+        highs = [c["high"] for c in candles[-24:]]
+        lows  = [c["low"]  for c in candles[-24:]]
+        vols  = [c["volume"] for c in candles[-24:]]
+        avg_vol = sum(vols) / len(vols) if vols else 0
+        avg_range = sum(h - l for h, l in zip(highs, lows)) / len(highs) if highs else 0
+        volatility_pct = (avg_range / price * 100) if price > 0 else 0
+
+        # Simulated liq value based on OI * price * volatility factor
+        liq_24h_long  = round(oi * price * volatility_pct * 0.0008, 2)
+        liq_24h_short = round(oi * price * volatility_pct * 0.0006, 2)
+        liq_24h_total = round(liq_24h_long + liq_24h_short, 2)
+
+        # Key price levels
+        recent_low  = min(lows) if lows else price * 0.97
+        recent_high = max(highs) if highs else price * 1.03
+
+        ranking.append({
+            "symbol": sym,
+            "price": price,
+            "change_pct": ticker["change_pct"],
+            "open_interest": oi,
+            "oi_value_usd": round(oi * price, 2),
+            "liq_24h_long": liq_24h_long,
+            "liq_24h_short": liq_24h_short,
+            "liq_24h_total": liq_24h_total,
+            "volatility_24h": round(volatility_pct, 2),
+            "volume_24h": ticker["volume"],
+            "support": round(recent_low, 4),
+            "resistance": round(recent_high, 4),
+        })
+
+    ranking.sort(key=lambda x: x["liq_24h_total"], reverse=True)
+    return jsonify(ranking)
+
+@app.route("/api/news")
+def crypto_news():
+    """Fetch crypto news from CryptoPanic or fallback to demo."""
+    # Try CryptoPanic public API (no auth required for public posts)
+    try:
+        r = requests.get("https://cryptopanic.com/api/free/v1/posts/?auth_token=public&public=true&kind=news", timeout=8)
+        r.raise_for_status()
+        data = r.json()
+        news = []
+        for item in data.get("results", [])[:15]:
+            news.append({
+                "title": item.get("title", ""),
+                "url": item.get("url", "#"),
+                "source": item.get("source", {}).get("title", "Desconhecido"),
+                "published_at": item.get("published_at", ""),
+                "currencies": [c.get("code", "") for c in item.get("currencies", [])],
+                "kind": item.get("kind", "news"),
+                "sentiment": item.get("votes", {}).get("positive", 0) - item.get("votes", {}).get("negative", 0),
+            })
+        return jsonify({"news": news, "demo": False})
+    except Exception:
+        pass
+
+    # Demo news
+    demo_news = [
+        {
+            "title": "Bitcoin ultrapassa US$ 83.000 com entrada recorde em ETFs spot",
+            "url": "#",
+            "source": "CoinDesk",
+            "published_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["BTC"],
+            "kind": "news",
+            "sentiment": 3,
+        },
+        {
+            "title": "Ethereum se prepara para atualização Pectra: o que esperar",
+            "url": "#",
+            "source": "The Block",
+            "published_at": (datetime.utcnow() - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["ETH"],
+            "kind": "news",
+            "sentiment": 2,
+        },
+        {
+            "title": "SEC adia decisão sobre ETF de Solana para segundo semestre",
+            "url": "#",
+            "source": "Bloomberg",
+            "published_at": (datetime.utcnow() - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["SOL"],
+            "kind": "news",
+            "sentiment": -1,
+        },
+        {
+            "title": "Binance anuncia programa de queima de BNB acelerado",
+            "url": "#",
+            "source": "CoinTelegraph",
+            "published_at": (datetime.utcnow() - timedelta(hours=5)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["BNB"],
+            "kind": "news",
+            "sentiment": 2,
+        },
+        {
+            "title": "Whale alerta: transferência de 12.000 BTC para exchange detectada",
+            "url": "#",
+            "source": "Whale Alert",
+            "published_at": (datetime.utcnow() - timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["BTC"],
+            "kind": "news",
+            "sentiment": -2,
+        },
+        {
+            "title": "XRP Ledger recebe atualização para suportar smart contracts nativos",
+            "url": "#",
+            "source": "Decrypt",
+            "published_at": (datetime.utcnow() - timedelta(hours=7)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["XRP"],
+            "kind": "news",
+            "sentiment": 3,
+        },
+        {
+            "title": "Liquidações no mercado de futuros somam US$ 320M nas últimas 24h",
+            "url": "#",
+            "source": "Coinglass",
+            "published_at": (datetime.utcnow() - timedelta(hours=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["BTC", "ETH"],
+            "kind": "news",
+            "sentiment": -1,
+        },
+        {
+            "title": "Dogecoin sobe 8% após Elon Musk postar meme sobre DOGE",
+            "url": "#",
+            "source": "CoinDesk",
+            "published_at": (datetime.utcnow() - timedelta(hours=9)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["DOGE"],
+            "kind": "news",
+            "sentiment": 2,
+        },
+        {
+            "title": "Avalanche fecha parceria com grande banco europeu para tokenização",
+            "url": "#",
+            "source": "The Block",
+            "published_at": (datetime.utcnow() - timedelta(hours=10)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["AVAX"],
+            "kind": "news",
+            "sentiment": 3,
+        },
+        {
+            "title": "Chainlink integra oracle em mais 5 redes Layer 2",
+            "url": "#",
+            "source": "CryptoSlate",
+            "published_at": (datetime.utcnow() - timedelta(hours=11)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["LINK"],
+            "kind": "news",
+            "sentiment": 2,
+        },
+        {
+            "title": "Federal Reserve sinaliza manutenção das taxas: mercado crypto reage",
+            "url": "#",
+            "source": "Reuters",
+            "published_at": (datetime.utcnow() - timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": [],
+            "kind": "news",
+            "sentiment": 0,
+        },
+        {
+            "title": "Cardano lança Hydra V2 com melhorias de escalabilidade",
+            "url": "#",
+            "source": "CoinTelegraph",
+            "published_at": (datetime.utcnow() - timedelta(hours=14)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "currencies": ["ADA"],
+            "kind": "news",
+            "sentiment": 2,
+        },
+    ]
+    return jsonify({"news": demo_news, "demo": True})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

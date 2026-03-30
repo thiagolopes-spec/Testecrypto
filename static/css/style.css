@@ -376,6 +376,196 @@ body {
   .indicators-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* ====== Full Width Row ====== */
+.full-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 1100px) {
+  .full-row { grid-template-columns: 1fr; }
+}
+
+/* ====== Liquidation Ranking Table ====== */
+.liq-table-wrap {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.liq-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.liq-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 10px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  z-index: 2;
+}
+.liq-table th:first-child, .liq-table td:first-child { text-align: left; }
+.liq-table th:nth-child(2), .liq-table td:nth-child(2) { text-align: left; }
+
+.liq-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(30,48,80,0.3);
+  text-align: right;
+  white-space: nowrap;
+}
+.liq-table tr:hover { background: rgba(59,130,246,0.06); }
+
+.liq-rank {
+  font-weight: 800;
+  color: var(--text-muted);
+  font-size: 13px;
+  width: 28px;
+  text-align: center !important;
+}
+.liq-rank.top3 { color: var(--yellow); }
+
+.liq-symbol-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.liq-symbol-name { font-weight: 700; font-size: 13px; }
+.liq-symbol-price { color: var(--text-muted); font-size: 11px; }
+
+.liq-bar-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.liq-bar {
+  height: 8px;
+  border-radius: 4px;
+  min-width: 4px;
+  transition: width 0.5s ease;
+}
+.liq-bar.long { background: linear-gradient(90deg, rgba(255,23,68,0.5), #ff1744); }
+.liq-bar.short { background: linear-gradient(90deg, rgba(0,230,118,0.5), #00e676); }
+
+.liq-total-value {
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.liq-summary-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.liq-summary-box {
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.liq-summary-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.liq-summary-value {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ====== News Section ====== */
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.news-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  cursor: default;
+}
+.news-item:hover {
+  border-color: var(--accent);
+  background: var(--surface3);
+}
+.news-sentiment {
+  width: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+.news-sentiment.positive { background: var(--green); }
+.news-sentiment.negative { background: var(--red); }
+.news-sentiment.neutral_ { background: var(--yellow); }
+
+.news-body { flex: 1; min-width: 0; }
+.news-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.news-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+.news-title a:hover { color: var(--accent); }
+
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.news-source {
+  font-weight: 600;
+  color: var(--accent);
+}
+.news-tags {
+  display: flex;
+  gap: 4px;
+}
+.news-tag {
+  background: rgba(59,130,246,0.15);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.news-sentiment-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.news-sentiment-badge.pos { color: var(--green); }
+.news-sentiment-badge.neg { color: var(--red); }
+.news-sentiment-badge.neu { color: var(--yellow); }
+
 /* ====== Scrollbar ====== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
