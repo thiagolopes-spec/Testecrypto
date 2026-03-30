@@ -848,17 +848,19 @@ function renderNews(news, container) {
     const badgeClass = n.sentiment > 0 ? 'pos' : n.sentiment < 0 ? 'neg' : 'neu';
     const sentIcon = n.sentiment > 0 ? '▲ Positivo' : n.sentiment < 0 ? '▼ Negativo' : '● Neutro';
     const tagsHtml = n.currencies.map(c => `<span class="news-tag">${c}</span>`).join('');
+    const hasUrl = n.url && n.url !== '#';
 
     html += `
-      <div class="news-item">
+      <div class="news-item ${hasUrl ? 'clickable' : ''}" ${hasUrl ? `onclick="window.open('${n.url}', '_blank', 'noopener')"` : ''}>
         <div class="news-sentiment ${sentClass}"></div>
         <div class="news-body">
-          <div class="news-title">${n.url !== '#' ? `<a href="${n.url}" target="_blank" rel="noopener">${n.title}</a>` : n.title}</div>
+          <div class="news-title">${n.title}</div>
           <div class="news-meta">
             <span class="news-source">${n.source}</span>
             <span>${timeAgo(n.published_at)}</span>
             <div class="news-tags">${tagsHtml}</div>
             <span class="news-sentiment-badge ${badgeClass}">${sentIcon}</span>
+            ${hasUrl ? '<span class="news-open-icon">↗</span>' : ''}
           </div>
         </div>
       </div>`;

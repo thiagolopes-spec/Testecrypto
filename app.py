@@ -443,7 +443,7 @@ def crypto_news():
     demo_news = [
         {
             "title": "Bitcoin ultrapassa US$ 83.000 com entrada recorde em ETFs spot",
-            "url": "#",
+            "url": "https://www.coindesk.com",
             "source": "CoinDesk",
             "published_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["BTC"],
@@ -452,7 +452,7 @@ def crypto_news():
         },
         {
             "title": "Ethereum se prepara para atualização Pectra: o que esperar",
-            "url": "#",
+            "url": "https://www.theblock.co",
             "source": "The Block",
             "published_at": (datetime.utcnow() - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["ETH"],
@@ -461,7 +461,7 @@ def crypto_news():
         },
         {
             "title": "SEC adia decisão sobre ETF de Solana para segundo semestre",
-            "url": "#",
+            "url": "https://www.bloomberg.com/crypto",
             "source": "Bloomberg",
             "published_at": (datetime.utcnow() - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["SOL"],
@@ -470,7 +470,7 @@ def crypto_news():
         },
         {
             "title": "Binance anuncia programa de queima de BNB acelerado",
-            "url": "#",
+            "url": "https://cointelegraph.com",
             "source": "CoinTelegraph",
             "published_at": (datetime.utcnow() - timedelta(hours=5)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["BNB"],
@@ -479,7 +479,7 @@ def crypto_news():
         },
         {
             "title": "Whale alerta: transferência de 12.000 BTC para exchange detectada",
-            "url": "#",
+            "url": "https://whale-alert.io",
             "source": "Whale Alert",
             "published_at": (datetime.utcnow() - timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["BTC"],
@@ -488,7 +488,7 @@ def crypto_news():
         },
         {
             "title": "XRP Ledger recebe atualização para suportar smart contracts nativos",
-            "url": "#",
+            "url": "https://decrypt.co",
             "source": "Decrypt",
             "published_at": (datetime.utcnow() - timedelta(hours=7)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["XRP"],
@@ -497,7 +497,7 @@ def crypto_news():
         },
         {
             "title": "Liquidações no mercado de futuros somam US$ 320M nas últimas 24h",
-            "url": "#",
+            "url": "https://www.coinglass.com",
             "source": "Coinglass",
             "published_at": (datetime.utcnow() - timedelta(hours=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["BTC", "ETH"],
@@ -506,7 +506,7 @@ def crypto_news():
         },
         {
             "title": "Dogecoin sobe 8% após Elon Musk postar meme sobre DOGE",
-            "url": "#",
+            "url": "https://www.coindesk.com",
             "source": "CoinDesk",
             "published_at": (datetime.utcnow() - timedelta(hours=9)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["DOGE"],
@@ -515,7 +515,7 @@ def crypto_news():
         },
         {
             "title": "Avalanche fecha parceria com grande banco europeu para tokenização",
-            "url": "#",
+            "url": "https://www.theblock.co",
             "source": "The Block",
             "published_at": (datetime.utcnow() - timedelta(hours=10)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["AVAX"],
@@ -524,7 +524,7 @@ def crypto_news():
         },
         {
             "title": "Chainlink integra oracle em mais 5 redes Layer 2",
-            "url": "#",
+            "url": "https://cryptoslate.com",
             "source": "CryptoSlate",
             "published_at": (datetime.utcnow() - timedelta(hours=11)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["LINK"],
@@ -533,7 +533,7 @@ def crypto_news():
         },
         {
             "title": "Federal Reserve sinaliza manutenção das taxas: mercado crypto reage",
-            "url": "#",
+            "url": "https://www.reuters.com/markets/currencies",
             "source": "Reuters",
             "published_at": (datetime.utcnow() - timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": [],
@@ -542,7 +542,7 @@ def crypto_news():
         },
         {
             "title": "Cardano lança Hydra V2 com melhorias de escalabilidade",
-            "url": "#",
+            "url": "https://cointelegraph.com",
             "source": "CoinTelegraph",
             "published_at": (datetime.utcnow() - timedelta(hours=14)).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "currencies": ["ADA"],

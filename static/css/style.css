@@ -512,9 +512,24 @@ body {
   transition: all 0.2s;
   cursor: default;
 }
-.news-item:hover {
-  border-color: var(--accent);
+.news-item.clickable {
+  cursor: pointer;
+}
+.news-item.clickable:hover {
+  border-color: var(--accent-bright);
   background: var(--surface3);
+  transform: translateX(3px);
+  box-shadow: 0 0 12px rgba(196,77,255,0.2);
+}
+.news-open-icon {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--accent-bright);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.news-item.clickable:hover .news-open-icon {
+  opacity: 1;
 }
 .news-sentiment {
   width: 4px;
