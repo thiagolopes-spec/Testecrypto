@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Market Analyzer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">◈</span>
+          <span class="logo-text">CryptoAnalyzer</span>
+        </div>
+        <div class="market-badge" id="marketBadge">
+          <span class="dot"></span> Mercado ao Vivo
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="global-stats" id="globalStats">
+          <span class="stat-item">BTC Dom: <strong id="btcDom">--</strong>%</span>
+          <span class="stat-item">Cap Total: <strong id="totalCap">--</strong></span>
+          <span class="stat-item" id="capChange">24h: <strong>--</strong></span>
+        </div>
+        <div class="last-update">Atualizado: <span id="lastUpdate">--</span></div>
+      </div>
+    </header>
+
+    <!-- Symbol Tabs -->
+    <div class="symbol-tabs" id="symbolTabs"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Buscando dados do mercado...</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
