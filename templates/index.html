@@ -42,6 +42,31 @@
           </div>
         </div>
 
+        <!-- Vivo Official Logo -->
+        <div class="vivo-logo-wrap">
+          <svg viewBox="0 0 420 120" height="28" xmlns="http://www.w3.org/2000/svg" aria-label="Vivo">
+            <!-- v -->
+            <path d="M10 20 L35 90 L60 20" stroke="#9400cc" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <!-- i dot -->
+            <circle cx="90" cy="18" r="12" fill="#9400cc"/>
+            <!-- i stem -->
+            <rect x="78" y="38" width="24" height="52" rx="12" fill="#9400cc"/>
+            <!-- v2 -->
+            <path d="M130 38 L155 90 L180 38" stroke="#9400cc" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <!-- o -->
+            <circle cx="230" cy="64" r="30" stroke="#9400cc" stroke-width="22" fill="none"/>
+            <!-- person head -->
+            <circle cx="350" cy="18" r="13" fill="#9400cc"/>
+            <!-- person body -->
+            <path d="M350 35 Q350 72 350 80" stroke="#9400cc" stroke-width="16" stroke-linecap="round" fill="none"/>
+            <!-- person arms -->
+            <path d="M310 55 Q330 48 350 52 Q370 48 390 55" stroke="#9400cc" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <!-- person legs -->
+            <path d="M350 80 Q338 95 328 110" stroke="#9400cc" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <path d="M350 80 Q362 95 372 110" stroke="#9400cc" stroke-width="14" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+
         <div class="divider-v"></div>
 
         <div class="market-badge" id="marketBadge">
@@ -67,6 +92,11 @@
       </div>
 
       <div class="header-right">
+        <div class="fear-greed-pill" id="fearGreedPill" title="Índice de Medo e Ganância do mercado crypto">
+          <span class="fg-label">Medo/Ganância</span>
+          <span class="fg-value" id="fgValue">--</span>
+          <span class="fg-class" id="fgClass">--</span>
+        </div>
         <div class="update-badge">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="23 4 23 10 17 10"></polyline>
@@ -106,6 +136,25 @@
     </main>
 
   </div>
+
+  <footer class="app-footer">
+    <div class="footer-dev">Desenvolvido por <strong>Thiago Lopes</strong></div>
+    <div class="footer-disclaimer">
+      As informações apresentadas têm caráter educativo e não constituem recomendação de investimento.
+      Mercado de criptomoedas envolve alto risco.
+    </div>
+    <div class="footer-brand">
+      <svg viewBox="0 0 160 45" height="16" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 8 L13 34 L22 8" stroke="#9400cc" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="34" cy="7" r="5" fill="#9400cc"/>
+        <rect x="29" y="15" width="10" height="20" rx="5" fill="#9400cc"/>
+        <path d="M49 15 L58 34 L67 15" stroke="#9400cc" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="87" cy="25" r="12" stroke="#9400cc" stroke-width="8" fill="none"/>
+      </svg>
+      <span style="color:#4a3570">CryptoAnalyzer · 2025</span>
+    </div>
+  </footer>
+
   <script src="/static/js/app.js"></script>
 </body>
 </html>

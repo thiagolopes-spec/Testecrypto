@@ -148,11 +148,63 @@ function renderDashboard(item) {
         <div class="vol-wrapper"><canvas id="volChart"></canvas></div>
       </div>
     </div>
+    <div class="fg-row">
+      <div class="card" id="fearGreedCard">
+        <div class="card-title">
+          <div class="card-title-icon">🌡️</div>
+          Termômetro Medo &amp; Ganância
+          <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">alternative.me</span>
+        </div>
+        <div id="fearGreedGaugeContent">
+          <div style="display:flex;align-items:center;justify-content:center;height:80px">
+            <div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="fearContextCard">
+        <div class="card-title">
+          <div class="card-title-icon">📖</div>
+          Como Interpretar o Índice
+        </div>
+        <div class="fg-context-list">
+          <div class="fg-context-item">
+            <div class="fg-context-dot" style="background:#ff1744"></div>
+            <span class="fg-context-range">0 – 20</span>
+            <span class="fg-context-label">Medo Extremo</span>
+            <span class="fg-context-desc">Investidores em pânico — historicamente um sinal de compra</span>
+          </div>
+          <div class="fg-context-item">
+            <div class="fg-context-dot" style="background:#ff9100"></div>
+            <span class="fg-context-range">21 – 40</span>
+            <span class="fg-context-label">Medo</span>
+            <span class="fg-context-desc">Sentimento negativo predomina, cautela no mercado</span>
+          </div>
+          <div class="fg-context-item">
+            <div class="fg-context-dot" style="background:#ffd740"></div>
+            <span class="fg-context-range">41 – 60</span>
+            <span class="fg-context-label">Neutro</span>
+            <span class="fg-context-desc">Mercado equilibrado, sem tendência emocional clara</span>
+          </div>
+          <div class="fg-context-item">
+            <div class="fg-context-dot" style="background:#69f0ae"></div>
+            <span class="fg-context-range">61 – 80</span>
+            <span class="fg-context-label">Ganância</span>
+            <span class="fg-context-desc">Otimismo elevado — possível sobrevalorização</span>
+          </div>
+          <div class="fg-context-item">
+            <div class="fg-context-dot" style="background:#00e676"></div>
+            <span class="fg-context-range">81 – 100</span>
+            <span class="fg-context-label">Ganância Extrema</span>
+            <span class="fg-context-desc">Euforia — historicamente precede correções</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="full-row">
       <div class="card" id="liqRankingCard">
         <div class="card-title">
           <div class="card-title-icon">🏆</div>
-          Ranking de Liquidações — Top 10 (24h)
+          Ranking de Liquidações — Top 20 Mercado Futuros (24h)
         </div>
         <div id="liqRankingContent">
           <div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text-muted)">
@@ -183,6 +235,7 @@ function renderDashboard(item) {
   loadLiquidations(item.symbol);
   loadLiquidationRanking();
   loadNews();
+  loadFearGreed();
 }
 
 // ====================================================
@@ -867,6 +920,109 @@ function renderNews(news, container) {
   });
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ====================================================
+//  Fear & Greed
+// ====================================================
+async function loadFearGreed() {
+  try {
+    const res = await fetch('/api/fear_greed');
+    const data = await res.json();
+    const val = parseInt(data.value, 10);
+    const cls = data.classification;
+
+    // Update header pill
+    const fgVal = document.getElementById('fgValue');
+    const fgCls = document.getElementById('fgClass');
+    if (fgVal) {
+      fgVal.textContent = val;
+      fgVal.style.color = fgColor(val);
+    }
+    if (fgCls) {
+      fgCls.textContent = fgTranslate(cls);
+      fgCls.style.color = fgColor(val);
+    }
+    const pill = document.getElementById('fearGreedPill');
+    if (pill) {
+      pill.style.borderColor = fgColor(val) + '55';
+    }
+
+    // Update dashboard gauge
+    const gaugeContainer = document.getElementById('fearGreedGaugeContent');
+    if (gaugeContainer) renderFearGreedGauge(gaugeContainer, val, cls, data.demo);
+  } catch (e) {
+    console.error('Erro fear & greed:', e);
+  }
+}
+
+function fgColor(v) {
+  if (v <= 20) return '#ff1744';
+  if (v <= 40) return '#ff9100';
+  if (v <= 60) return '#ffd740';
+  if (v <= 80) return '#69f0ae';
+  return '#00e676';
+}
+
+function fgTranslate(cls) {
+  const map = {
+    'Extreme Fear': 'Medo Extremo',
+    'Fear': 'Medo',
+    'Neutral': 'Neutro',
+    'Greed': 'Ganância',
+    'Extreme Greed': 'Ganância Extrema',
+  };
+  return map[cls] || cls;
+}
+
+function renderFearGreedGauge(container, value, classification, isDemo) {
+  const cx = 110, cy = 100, r = 80, rn = 68;
+
+  // Point on the top semicircle arc at value v (0=left, 100=right)
+  const arcPt = (v) => {
+    const theta = Math.PI * (1 - v / 100);
+    return [cx + r * Math.cos(theta), cy - r * Math.sin(theta)];
+  };
+
+  // Needle endpoint
+  const theta = Math.PI * (1 - value / 100);
+  const nx = cx + rn * Math.cos(theta);
+  const ny = cy - rn * Math.sin(theta);
+
+  const zones = [
+    { from: 0,  to: 20,  color: '#ff1744' },
+    { from: 20, to: 40,  color: '#ff9100' },
+    { from: 40, to: 60,  color: '#ffd740' },
+    { from: 60, to: 80,  color: '#69f0ae' },
+    { from: 80, to: 100, color: '#00e676' },
+  ];
+
+  let zonePaths = '';
+  zones.forEach(z => {
+    const [x1, y1] = arcPt(z.from);
+    const [x2, y2] = arcPt(z.to);
+    zonePaths += `<path d="M ${x1.toFixed(1)},${y1.toFixed(1)} A ${r} ${r} 0 0 0 ${x2.toFixed(1)},${y2.toFixed(1)}" stroke="${z.color}" stroke-width="13" fill="none" stroke-linecap="butt" opacity="0.75"/>`;
+  });
+
+  const color = fgColor(value);
+  const clsPt = fgTranslate(classification);
+
+  container.innerHTML = `
+    <div class="fg-gauge-wrap">
+      <svg viewBox="0 0 220 112" class="fg-gauge-svg">
+        ${zonePaths}
+        <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="${cx}" cy="${cy}" r="8" fill="${color}" opacity="0.85"/>
+        <circle cx="${cx}" cy="${cy}" r="4" fill="#08050f"/>
+        <text x="${cx}" y="${cy + 20}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="20" font-weight="800" fill="${color}">${value}</text>
+        <text x="${cx}" y="${cy + 32}" text-anchor="middle" font-family="Inter, sans-serif" font-size="8.5" fill="#7a5fa8" letter-spacing="0.8">${clsPt.toUpperCase()}</text>
+        <text x="22" y="108" font-family="Inter, sans-serif" font-size="8" fill="#4a3570">MEDO</text>
+        <text x="${cx}" y="108" text-anchor="middle" font-family="Inter, sans-serif" font-size="8" fill="#4a3570">NEUTRO</text>
+        <text x="198" y="108" text-anchor="end" font-family="Inter, sans-serif" font-size="8" fill="#4a3570">GANÂNCIA</text>
+      </svg>
+      ${isDemo ? '<div class="fg-demo-badge">DADOS DEMO</div>' : ''}
+    </div>
+  `;
 }
 
 // ====================================================

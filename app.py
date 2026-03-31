@@ -11,20 +11,34 @@ CORS(app)
 BINANCE_BASE = "https://api.binance.com/api/v3"
 BINANCE_FUTURES = "https://fapi.binance.com/fapi/v1"
 
-SYMBOLS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
-           "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "DOTUSDT", "LINKUSDT"]
+SYMBOLS = [
+    "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
+    "ADAUSDT", "DOGEUSDT", "AVAXUSDT", "DOTUSDT", "LINKUSDT",
+    "LTCUSDT", "ATOMUSDT", "NEARUSDT", "INJUSDT", "APTUSDT",
+    "ARBUSDT", "OPUSDT", "MATICUSDT", "UNIUSDT", "AAVEUSDT",
+]
 
 DEMO_PRICES = {
-    "BTCUSDT": 83200.0,
-    "ETHUSDT": 1835.0,
-    "BNBUSDT": 598.0,
-    "SOLUSDT": 124.5,
-    "XRPUSDT": 2.14,
-    "ADAUSDT": 0.68,
-    "DOGEUSDT": 0.165,
-    "AVAXUSDT": 34.5,
-    "DOTUSDT": 6.12,
-    "LINKUSDT": 13.8,
+    "BTCUSDT":   62400.0,
+    "ETHUSDT":   3120.0,
+    "BNBUSDT":   420.0,
+    "SOLUSDT":   142.0,
+    "XRPUSDT":   0.52,
+    "ADAUSDT":   0.44,
+    "DOGEUSDT":  0.12,
+    "AVAXUSDT":  36.5,
+    "DOTUSDT":   7.20,
+    "LINKUSDT":  14.8,
+    "LTCUSDT":   82.0,
+    "ATOMUSDT":  8.90,
+    "NEARUSDT":  5.40,
+    "INJUSDT":   24.5,
+    "APTUSDT":   8.10,
+    "ARBUSDT":   1.08,
+    "OPUSDT":    2.15,
+    "MATICUSDT": 0.88,
+    "UNIUSDT":   9.40,
+    "AAVEUSDT":  215.0,
 }
 
 # ====================================================
@@ -33,8 +47,12 @@ DEMO_PRICES = {
 def generate_demo_klines(symbol, limit=100):
     base = DEMO_PRICES[symbol]
     now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
-    trends = {"BTCUSDT": 0.0003, "ETHUSDT": -0.0002, "BNBUSDT": 0.0001, "SOLUSDT": 0.0004, "XRPUSDT": -0.0001,
-               "ADAUSDT": 0.0002, "DOGEUSDT": 0.0005, "AVAXUSDT": -0.0003, "DOTUSDT": 0.0001, "LINKUSDT": 0.0003}
+    trends = {
+        "BTCUSDT": 0.0003, "ETHUSDT": -0.0002, "BNBUSDT": 0.0001, "SOLUSDT": 0.0004, "XRPUSDT": -0.0001,
+        "ADAUSDT": 0.0002, "DOGEUSDT": 0.0005, "AVAXUSDT": -0.0003, "DOTUSDT": 0.0001, "LINKUSDT": 0.0003,
+        "LTCUSDT": -0.0001, "ATOMUSDT": 0.0002, "NEARUSDT": 0.0004, "INJUSDT": 0.0003, "APTUSDT": -0.0002,
+        "ARBUSDT": 0.0001, "OPUSDT": -0.0002, "MATICUSDT": 0.0001, "UNIUSDT": 0.0002, "AAVEUSDT": 0.0003,
+    }
     drift = trends.get(symbol, 0)
     volatility = base * 0.012
     rows = []
@@ -61,8 +79,12 @@ def generate_demo_klines(symbol, limit=100):
 
 def generate_demo_ticker(symbol):
     base = DEMO_PRICES[symbol]
-    changes = {"BTCUSDT": 2.34, "ETHUSDT": -3.12, "BNBUSDT": 1.05, "SOLUSDT": 5.67, "XRPUSDT": -1.88,
-                "ADAUSDT": 3.21, "DOGEUSDT": 8.44, "AVAXUSDT": -2.15, "DOTUSDT": 1.77, "LINKUSDT": 4.02}
+    changes = {
+        "BTCUSDT": 2.34, "ETHUSDT": -3.12, "BNBUSDT": 1.05, "SOLUSDT": 5.67, "XRPUSDT": -1.88,
+        "ADAUSDT": 3.21, "DOGEUSDT": 8.44, "AVAXUSDT": -2.15, "DOTUSDT": 1.77, "LINKUSDT": 4.02,
+        "LTCUSDT": -1.23, "ATOMUSDT": 2.88, "NEARUSDT": 6.41, "INJUSDT": 3.55, "APTUSDT": -4.10,
+        "ARBUSDT": 1.90, "OPUSDT": -2.77, "MATICUSDT": 0.95, "UNIUSDT": 2.44, "AAVEUSDT": 3.18,
+    }
     chg = changes.get(symbol, 0)
     return {"price": base, "change_pct": chg, "volume": base * 18000, "high": base * 1.03, "low": base * 0.97}
 
@@ -127,8 +149,12 @@ def fetch_open_interest(symbol):
         r.raise_for_status()
         return float(r.json().get("openInterest", 0))
     except Exception:
-        base_oi = {"BTCUSDT": 85000, "ETHUSDT": 1200000, "BNBUSDT": 450000, "SOLUSDT": 2800000, "XRPUSDT": 150000000,
-                    "ADAUSDT": 52000000, "DOGEUSDT": 85000000, "AVAXUSDT": 3200000, "DOTUSDT": 12000000, "LINKUSDT": 8500000}
+        base_oi = {
+            "BTCUSDT": 85000, "ETHUSDT": 1200000, "BNBUSDT": 450000, "SOLUSDT": 2800000, "XRPUSDT": 150000000,
+            "ADAUSDT": 52000000, "DOGEUSDT": 85000000, "AVAXUSDT": 3200000, "DOTUSDT": 12000000, "LINKUSDT": 8500000,
+            "LTCUSDT": 550000, "ATOMUSDT": 4200000, "NEARUSDT": 18000000, "INJUSDT": 2100000, "APTUSDT": 9800000,
+            "ARBUSDT": 45000000, "OPUSDT": 22000000, "MATICUSDT": 95000000, "UNIUSDT": 3800000, "AAVEUSDT": 280000,
+        }
         return base_oi.get(symbol, 100000)
 
 # ====================================================
@@ -441,116 +467,46 @@ def crypto_news():
 
     # Demo news
     demo_news = [
-        {
-            "title": "Bitcoin ultrapassa US$ 83.000 com entrada recorde em ETFs spot",
-            "url": "https://www.coindesk.com",
-            "source": "CoinDesk",
-            "published_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["BTC"],
-            "kind": "news",
-            "sentiment": 3,
-        },
-        {
-            "title": "Ethereum se prepara para atualização Pectra: o que esperar",
-            "url": "https://www.theblock.co",
-            "source": "The Block",
-            "published_at": (datetime.utcnow() - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["ETH"],
-            "kind": "news",
-            "sentiment": 2,
-        },
-        {
-            "title": "SEC adia decisão sobre ETF de Solana para segundo semestre",
-            "url": "https://www.bloomberg.com/crypto",
-            "source": "Bloomberg",
-            "published_at": (datetime.utcnow() - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["SOL"],
-            "kind": "news",
-            "sentiment": -1,
-        },
-        {
-            "title": "Binance anuncia programa de queima de BNB acelerado",
-            "url": "https://cointelegraph.com",
-            "source": "CoinTelegraph",
-            "published_at": (datetime.utcnow() - timedelta(hours=5)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["BNB"],
-            "kind": "news",
-            "sentiment": 2,
-        },
-        {
-            "title": "Whale alerta: transferência de 12.000 BTC para exchange detectada",
-            "url": "https://whale-alert.io",
-            "source": "Whale Alert",
-            "published_at": (datetime.utcnow() - timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["BTC"],
-            "kind": "news",
-            "sentiment": -2,
-        },
-        {
-            "title": "XRP Ledger recebe atualização para suportar smart contracts nativos",
-            "url": "https://decrypt.co",
-            "source": "Decrypt",
-            "published_at": (datetime.utcnow() - timedelta(hours=7)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["XRP"],
-            "kind": "news",
-            "sentiment": 3,
-        },
-        {
-            "title": "Liquidações no mercado de futuros somam US$ 320M nas últimas 24h",
-            "url": "https://www.coinglass.com",
-            "source": "Coinglass",
-            "published_at": (datetime.utcnow() - timedelta(hours=8)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["BTC", "ETH"],
-            "kind": "news",
-            "sentiment": -1,
-        },
-        {
-            "title": "Dogecoin sobe 8% após Elon Musk postar meme sobre DOGE",
-            "url": "https://www.coindesk.com",
-            "source": "CoinDesk",
-            "published_at": (datetime.utcnow() - timedelta(hours=9)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["DOGE"],
-            "kind": "news",
-            "sentiment": 2,
-        },
-        {
-            "title": "Avalanche fecha parceria com grande banco europeu para tokenização",
-            "url": "https://www.theblock.co",
-            "source": "The Block",
-            "published_at": (datetime.utcnow() - timedelta(hours=10)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["AVAX"],
-            "kind": "news",
-            "sentiment": 3,
-        },
-        {
-            "title": "Chainlink integra oracle em mais 5 redes Layer 2",
-            "url": "https://cryptoslate.com",
-            "source": "CryptoSlate",
-            "published_at": (datetime.utcnow() - timedelta(hours=11)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["LINK"],
-            "kind": "news",
-            "sentiment": 2,
-        },
-        {
-            "title": "Federal Reserve sinaliza manutenção das taxas: mercado crypto reage",
-            "url": "https://www.reuters.com/markets/currencies",
-            "source": "Reuters",
-            "published_at": (datetime.utcnow() - timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": [],
-            "kind": "news",
-            "sentiment": 0,
-        },
-        {
-            "title": "Cardano lança Hydra V2 com melhorias de escalabilidade",
-            "url": "https://cointelegraph.com",
-            "source": "CoinTelegraph",
-            "published_at": (datetime.utcnow() - timedelta(hours=14)).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "currencies": ["ADA"],
-            "kind": "news",
-            "sentiment": 2,
-        },
+        {"title": "Bitcoin registra entrada recorde em ETFs spot pela terceira semana consecutiva", "url": "https://www.coindesk.com", "source": "CoinDesk", "published_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["BTC"], "kind": "news", "sentiment": 3},
+        {"title": "Ethereum se prepara para atualização Pectra: o que esperar nos próximos meses", "url": "https://www.theblock.co", "source": "The Block", "published_at": (datetime.utcnow() - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["ETH"], "kind": "news", "sentiment": 2},
+        {"title": "SEC adia decisão sobre ETF de Solana para o segundo semestre do ano", "url": "https://www.bloomberg.com/crypto", "source": "Bloomberg", "published_at": (datetime.utcnow() - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["SOL"], "kind": "news", "sentiment": -1},
+        {"title": "Bitcoin testa resistência histórica: analistas divergem sobre próximo movimento", "url": "https://cointelegraph.com", "source": "CoinTelegraph", "published_at": (datetime.utcnow() - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["BTC"], "kind": "news", "sentiment": 0},
+        {"title": "Binance anuncia programa de queima de BNB com ritmo acelerado", "url": "https://cointelegraph.com", "source": "CoinTelegraph", "published_at": (datetime.utcnow() - timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["BNB"], "kind": "news", "sentiment": 2},
+        {"title": "Whale alert: grande transferência de BTC detectada entre carteiras frias", "url": "https://whale-alert.io", "source": "Whale Alert", "published_at": (datetime.utcnow() - timedelta(hours=5)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["BTC"], "kind": "news", "sentiment": -2},
+        {"title": "XRP Ledger recebe atualização para suportar smart contracts nativos", "url": "https://decrypt.co", "source": "Decrypt", "published_at": (datetime.utcnow() - timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["XRP"], "kind": "news", "sentiment": 3},
+        {"title": "Mercado de futuros crypto registra volume elevado de liquidações nas últimas 24h", "url": "https://www.coinglass.com", "source": "Coinglass", "published_at": (datetime.utcnow() - timedelta(hours=7)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["BTC", "ETH"], "kind": "news", "sentiment": -1},
+        {"title": "Solana supera Ethereum em número de transações diárias pelo quinto dia seguido", "url": "https://decrypt.co", "source": "Decrypt", "published_at": (datetime.utcnow() - timedelta(hours=8)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["SOL", "ETH"], "kind": "news", "sentiment": 2},
+        {"title": "Dogecoin apresenta forte volatilidade após menção em rede social", "url": "https://www.coindesk.com", "source": "CoinDesk", "published_at": (datetime.utcnow() - timedelta(hours=9)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["DOGE"], "kind": "news", "sentiment": 1},
+        {"title": "Avalanche fecha parceria com grande instituição europeia para tokenização de ativos", "url": "https://www.theblock.co", "source": "The Block", "published_at": (datetime.utcnow() - timedelta(hours=10)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["AVAX"], "kind": "news", "sentiment": 3},
+        {"title": "Chainlink integra serviço de oracle em mais 5 redes Layer 2", "url": "https://cryptoslate.com", "source": "CryptoSlate", "published_at": (datetime.utcnow() - timedelta(hours=11)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["LINK"], "kind": "news", "sentiment": 2},
+        {"title": "Federal Reserve mantém postura cautelosa sobre taxas — crypto monitora reação dos mercados", "url": "https://www.reuters.com/markets/currencies", "source": "Reuters", "published_at": (datetime.utcnow() - timedelta(hours=12)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": [], "kind": "news", "sentiment": 0},
+        {"title": "Cardano lança Hydra V2 com melhorias significativas de escalabilidade", "url": "https://cointelegraph.com", "source": "CoinTelegraph", "published_at": (datetime.utcnow() - timedelta(hours=13)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["ADA"], "kind": "news", "sentiment": 2},
+        {"title": "NEAR Protocol anuncia integração com inteligência artificial para smart contracts", "url": "https://cryptoslate.com", "source": "CryptoSlate", "published_at": (datetime.utcnow() - timedelta(hours=14)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["NEAR"], "kind": "news", "sentiment": 3},
+        {"title": "Uniswap V4 entra em fase de testes públicos com nova estrutura de taxas", "url": "https://decrypt.co", "source": "Decrypt", "published_at": (datetime.utcnow() - timedelta(hours=16)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["UNI"], "kind": "news", "sentiment": 2},
+        {"title": "Polygon (MATIC) confirma migração completa para POL concluída com sucesso", "url": "https://www.theblock.co", "source": "The Block", "published_at": (datetime.utcnow() - timedelta(hours=18)).strftime("%Y-%m-%dT%H:%M:%SZ"), "currencies": ["MATIC"], "kind": "news", "sentiment": 2},
     ]
     return jsonify({"news": demo_news, "demo": True})
+
+@app.route("/api/fear_greed")
+def fear_greed():
+    """Fetch Fear & Greed index from alternative.me or return demo."""
+    try:
+        r = requests.get("https://api.alternative.me/fng/?limit=1", timeout=8)
+        r.raise_for_status()
+        d = r.json()["data"][0]
+        return jsonify({
+            "value":              int(d["value"]),
+            "classification":     d["value_classification"],
+            "timestamp":          d["timestamp"],
+            "demo":               False,
+        })
+    except Exception:
+        return jsonify({
+            "value":          42,
+            "classification": "Fear",
+            "timestamp":      str(int(datetime.utcnow().timestamp())),
+            "demo":           True,
+        })
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
