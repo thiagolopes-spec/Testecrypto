@@ -65,7 +65,11 @@ async function loadDominance() {
     document.getElementById('totalCap').textContent = formatBig(d.total_market_cap);
     const capEl = document.getElementById('capChange');
     const pct = d.market_cap_change_24h;
-    capEl.innerHTML = `24h: <strong style="color:${pct >= 0 ? 'var(--green)' : 'var(--red)'}">${pct >= 0 ? '+' : ''}${pct}%</strong>`;
+    const color = pct >= 0 ? 'var(--green)' : 'var(--red)';
+    capEl.innerHTML = `
+      <span class="stat-label">24h</span>
+      <span class="stat-value" style="color:${color}">${pct >= 0 ? '+' : ''}${pct}%</span>
+    `;
   } catch (e) {}
 }
 
@@ -79,14 +83,17 @@ function renderTabs() {
     const tab = document.createElement('div');
     tab.className = 'symbol-tab' + (item.symbol === activeSymbol ? ' active' : '');
     const chg = item.ticker.change_pct;
-    const sigColor = item.signal.color;
+    const sig = item.signal;
+    const badgeBg = sig.color + '22';
     tab.innerHTML = `
-      <div>
+      <div class="tab-info">
         <div class="tab-symbol">${item.symbol.replace('USDT', '')}</div>
         <div class="tab-price">${formatPrice(item.ticker.price)}</div>
         <div class="tab-change ${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%</div>
       </div>
-      <div class="tab-signal-dot" style="background:${sigColor};box-shadow:0 0 6px ${sigColor}"></div>
+      <div class="tab-signal-badge" style="color:${sig.color};background:${badgeBg};border:1px solid ${sig.color}44">
+        ${sig.action.split(' ')[0]}
+      </div>
     `;
     tab.addEventListener('click', () => {
       activeSymbol = item.symbol;
@@ -115,33 +122,59 @@ function renderDashboard(item) {
     <div class="top-row">
       <div class="card signal-card" id="signalCard"></div>
       <div class="card" id="candleCard">
-        <div class="card-title"><span>📈</span> Gráfico de Preço (1H) — ${item.symbol}</div>
+        <div class="card-title">
+          <div class="card-title-icon">📈</div>
+          Gráfico de Preço — <span style="color:var(--vivo-bright);margin-left:4px">${item.symbol.replace('USDT','/USDT')}</span>
+          <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">1H · últimas 60 velas</span>
+        </div>
         <div class="chart-wrapper"><canvas id="candleChart"></canvas></div>
         <div class="rsi-wrapper"><canvas id="rsiChart"></canvas></div>
       </div>
     </div>
     <div class="bottom-row">
       <div class="card" id="liqCard">
-        <div class="card-title"><span>💥</span> Mapa de Liquidações — ${item.symbol}</div>
+        <div class="card-title">
+          <div class="card-title-icon">💥</div>
+          Mapa de Liquidações — <span style="color:var(--vivo-bright);margin-left:4px">${item.symbol.replace('USDT','/USDT')}</span>
+        </div>
         <div class="liq-chart-wrapper"><canvas id="liqChart"></canvas></div>
         <div class="liq-legend">
-          <div class="liq-legend-item"><div class="liq-dot" style="background:#ff1744"></div> Liquidações Long (vendedores forçados abaixo)</div>
-          <div class="liq-legend-item"><div class="liq-dot" style="background:#00e676"></div> Liquidações Short (compradores forçados acima)</div>
+          <div class="liq-legend-item"><div class="liq-dot" style="background:#ff1744"></div> Longs liquidados (queda de preço)</div>
+          <div class="liq-legend-item"><div class="liq-dot" style="background:#00e676"></div> Shorts liquidados (subida de preço)</div>
         </div>
       </div>
       <div class="card" id="volCard">
-        <div class="card-title"><span>📊</span> Volume & MACD</div>
+        <div class="card-title">
+          <div class="card-title-icon">📊</div>
+          Volume & MACD
+          <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">1H</span>
+        </div>
         <div class="vol-wrapper"><canvas id="volChart"></canvas></div>
       </div>
     </div>
     <div class="full-row">
       <div class="card" id="liqRankingCard">
-        <div class="card-title"><span>🏆</span> Ranking de Liquidações — Top 10 Tokens (24h)</div>
-        <div id="liqRankingContent"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        <div class="card-title">
+          <div class="card-title-icon">🏆</div>
+          Ranking de Liquidações — Top 10 (24h)
+        </div>
+        <div id="liqRankingContent">
+          <div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text-muted)">
+            <div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div>
+          </div>
+        </div>
       </div>
       <div class="card" id="newsCard">
-        <div class="card-title"><span>📰</span> Notícias Crypto — Últimas Horas</div>
-        <div id="newsContent"><div class="loading-overlay"><div class="spinner"></div></div></div>
+        <div class="card-title">
+          <div class="card-title-icon">📰</div>
+          Notícias Crypto
+          <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">últimas horas</span>
+        </div>
+        <div id="newsContent">
+          <div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text-muted)">
+            <div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -190,7 +223,10 @@ function renderSignalCard(item) {
   const trendBull = ind.ema9 > ind.ema21;
 
   card.innerHTML = `
-    <div class="card-title"><span>🎯</span> Recomendação — ${item.symbol.replace('USDT','')}</div>
+    <div class="card-title">
+      <div class="card-title-icon">🎯</div>
+      Recomendação — <span style="color:var(--vivo-bright);margin-left:4px">${item.symbol.replace('USDT','')}</span>
+    </div>
     <div class="signal-main" style="border-color:${signal.color};background:${signal.color}18">
       <div class="signal-action" style="color:${signal.color}">${signal.action}</div>
       <div class="signal-confidence">Confiança: ${signal.confidence}%</div>
@@ -258,8 +294,8 @@ function renderSignalCard(item) {
     </div>
 
     <div class="signal-reasons">
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Motivos da Análise</div>
-      ${reasonsHtml || '<div class="reason-item"><span>Sem sinais claros no momento</span></div>'}
+      <div class="reasons-label">Motivos da Análise</div>
+      ${reasonsHtml || '<div class="reason-item"><span class="reason-icon">•</span><span>Sem sinais claros no momento</span></div>'}
     </div>
   `;
 }

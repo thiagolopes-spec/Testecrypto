@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto Market Analyzer</title>
+  <title>CryptoAnalyzer — Vivo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
@@ -12,39 +14,98 @@
 </head>
 <body>
   <div class="app">
+
     <!-- Header -->
     <header class="header">
       <div class="header-left">
         <div class="logo">
-          <span class="logo-icon">◈</span>
-          <span class="logo-text">CryptoAnalyzer</span>
+          <div class="logo-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" fill="url(#lg1)"/>
+              <path d="M2 17l10 5 10-5" stroke="url(#lg2)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M2 12l10 5 10-5" stroke="url(#lg2)" stroke-width="2" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="lg1" x1="2" y1="2" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#c44dff"/>
+                  <stop offset="1" stop-color="#ff00cc"/>
+                </linearGradient>
+                <linearGradient id="lg2" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#c44dff"/>
+                  <stop offset="1" stop-color="#ff00cc"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="logo-text-wrap">
+            <span class="logo-text">CryptoAnalyzer</span>
+            <span class="logo-sub">by Vivo</span>
+          </div>
         </div>
+
+        <div class="divider-v"></div>
+
         <div class="market-badge" id="marketBadge">
-          <span class="dot"></span> Mercado ao Vivo
+          <span class="dot"></span>
+          <span>Mercado ao Vivo</span>
         </div>
       </div>
-      <div class="header-right">
-        <div class="global-stats" id="globalStats">
-          <span class="stat-item">BTC Dom: <strong id="btcDom">--</strong>%</span>
-          <span class="stat-item">Cap Total: <strong id="totalCap">--</strong></span>
-          <span class="stat-item" id="capChange">24h: <strong>--</strong></span>
+
+      <div class="header-center" id="globalStats">
+        <div class="stat-pill">
+          <span class="stat-label">BTC Dom.</span>
+          <span class="stat-value" id="btcDom">--</span>
+          <span class="stat-unit">%</span>
         </div>
-        <div class="last-update">Atualizado: <span id="lastUpdate">--</span></div>
+        <div class="stat-pill">
+          <span class="stat-label">Cap. Total</span>
+          <span class="stat-value" id="totalCap">--</span>
+        </div>
+        <div class="stat-pill" id="capChange">
+          <span class="stat-label">24h</span>
+          <span class="stat-value">--</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="update-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          <span id="lastUpdate">--</span>
+        </div>
       </div>
     </header>
 
     <!-- Symbol Tabs -->
-    <div class="symbol-tabs" id="symbolTabs"></div>
+    <div class="symbol-bar">
+      <div class="symbol-tabs" id="symbolTabs"></div>
+    </div>
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
       <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>Buscando dados do mercado...</p>
+        <div class="loading-logo">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" fill="url(#ll1)"/>
+            <path d="M2 17l10 5 10-5" stroke="url(#ll2)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M2 12l10 5 10-5" stroke="url(#ll2)" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="ll1" x1="2" y1="2" x2="22" y2="12" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#c44dff"/><stop offset="1" stop-color="#ff00cc"/>
+              </linearGradient>
+              <linearGradient id="ll2" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#c44dff"/><stop offset="1" stop-color="#ff00cc"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+        <p class="loading-text">Buscando dados do mercado...</p>
       </div>
     </main>
-  </div>
 
+  </div>
   <script src="/static/js/app.js"></script>
 </body>
 </html>
