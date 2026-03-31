@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 import requests
 import random
@@ -10,6 +10,28 @@ CORS(app)
 
 BINANCE_BASE = "https://api.binance.com/api/v3"
 BINANCE_FUTURES = "https://fapi.binance.com/fapi/v1"
+
+VALID_INTERVALS = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '6h', '12h', '1d']
+INTERVAL_MINUTES = {
+    '1m': 1, '5m': 5, '15m': 15, '30m': 30,
+    '1h': 60, '2h': 120, '4h': 240, '6h': 360, '12h': 720, '1d': 1440,
+}
+
+# Liquidation period → (candle_interval, limit)
+LIQ_PERIOD_PARAMS = {
+    '4h':  ('1h',  4),
+    '8h':  ('1h',  8),
+    '12h': ('1h', 12),
+    '24h': ('1h', 24),
+    '3d':  ('4h', 18),
+    '7d':  ('1d',  7),
+}
+RANKING_PERIOD_PARAMS = {
+    '4h':  ('1h',  4),
+    '8h':  ('1h',  8),
+    '12h': ('1h', 12),
+    '24h': ('1h', 24),
+}
 
 SYMBOLS = [
     "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
@@ -44,28 +66,41 @@ DEMO_PRICES = {
 # ====================================================
 #  Demo Data Generator (pure Python)
 # ====================================================
-def generate_demo_klines(symbol, limit=100):
+def generate_demo_klines(symbol, limit=100, interval='1h'):
     base = DEMO_PRICES[symbol]
-    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    interval_min = INTERVAL_MINUTES.get(interval, 60)
+    scale = math.sqrt(interval_min / 60.0)   # volatility scales with sqrt(time)
+
+    now = datetime.utcnow().replace(second=0, microsecond=0)
+    if interval_min >= 1440:
+        now = now.replace(hour=0, minute=0)
+    elif interval_min >= 60:
+        now = now.replace(minute=0)
+    else:
+        aligned = (now.minute // interval_min) * interval_min
+        now = now.replace(minute=aligned)
+
     trends = {
         "BTCUSDT": 0.0003, "ETHUSDT": -0.0002, "BNBUSDT": 0.0001, "SOLUSDT": 0.0004, "XRPUSDT": -0.0001,
         "ADAUSDT": 0.0002, "DOGEUSDT": 0.0005, "AVAXUSDT": -0.0003, "DOTUSDT": 0.0001, "LINKUSDT": 0.0003,
         "LTCUSDT": -0.0001, "ATOMUSDT": 0.0002, "NEARUSDT": 0.0004, "INJUSDT": 0.0003, "APTUSDT": -0.0002,
         "ARBUSDT": 0.0001, "OPUSDT": -0.0002, "MATICUSDT": 0.0001, "UNIUSDT": 0.0002, "AAVEUSDT": 0.0003,
     }
-    drift = trends.get(symbol, 0)
-    volatility = base * 0.012
+    base_drift = trends.get(symbol, 0)
+    drift      = base_drift * scale
+    volatility = base * 0.012 * scale
+
     rows = []
-    price = base * (1 - drift * limit * 0.5)
-    rng = random.Random(hash(symbol) % 99999)
+    price = base * (1 - base_drift * limit * 0.5)
+    rng = random.Random((hash(symbol) + hash(interval)) % 99999)
     for i in range(limit):
-        ts = now - timedelta(hours=(limit - i))
-        change = rng.gauss(drift, 0.008) * price
-        open_p = price
+        ts = now - timedelta(minutes=interval_min * (limit - i))
+        change = rng.gauss(drift, 0.008 * scale) * price
+        open_p  = price
         close_p = price + change
-        high_p = max(open_p, close_p) + abs(rng.gauss(0, volatility * 0.3))
-        low_p  = min(open_p, close_p) - abs(rng.gauss(0, volatility * 0.3))
-        vol    = abs(rng.gauss(base * 200, base * 80))
+        high_p  = max(open_p, close_p) + abs(rng.gauss(0, volatility * 0.3))
+        low_p   = min(open_p, close_p) - abs(rng.gauss(0, volatility * 0.3))
+        vol     = abs(rng.gauss(base * 200, base * 80))
         rows.append({
             "open_time": ts.strftime("%Y-%m-%dT%H:%M:%S"),
             "open":  round(open_p, 4),
@@ -91,10 +126,10 @@ def generate_demo_ticker(symbol):
 # ====================================================
 #  Live Fetchers with demo fallback
 # ====================================================
-def fetch_klines(symbol, limit=100):
+def fetch_klines(symbol, limit=100, interval='1h'):
     try:
         url = f"{BINANCE_BASE}/klines"
-        params = {"symbol": symbol, "interval": "1h", "limit": limit}
+        params = {"symbol": symbol, "interval": interval, "limit": limit}
         r = requests.get(url, params=params, timeout=8)
         r.raise_for_status()
         data = r.json()
@@ -110,28 +145,10 @@ def fetch_klines(symbol, limit=100):
             })
         return rows
     except Exception:
-        return generate_demo_klines(symbol, limit)
+        return generate_demo_klines(symbol, limit, interval)
 
 def fetch_klines_4h(symbol, limit=100):
-    try:
-        url = f"{BINANCE_BASE}/klines"
-        params = {"symbol": symbol, "interval": "4h", "limit": limit}
-        r = requests.get(url, params=params, timeout=8)
-        r.raise_for_status()
-        data = r.json()
-        rows = []
-        for d in data:
-            rows.append({
-                "open_time": datetime.utcfromtimestamp(d[0]/1000).strftime("%Y-%m-%dT%H:%M:%S"),
-                "open":   float(d[1]),
-                "high":   float(d[2]),
-                "low":    float(d[3]),
-                "close":  float(d[4]),
-                "volume": float(d[5]),
-            })
-        return rows
-    except Exception:
-        return generate_demo_klines(symbol, limit)
+    return fetch_klines(symbol, limit, '4h')
 
 def fetch_ticker(symbol):
     try:
@@ -360,14 +377,30 @@ def liquidation_map(symbol):
     symbol = symbol.upper()
     if symbol not in SYMBOLS:
         return jsonify({"error": "Symbol not supported"}), 400
+    period = request.args.get('period', '24h')
+    if period not in LIQ_PERIOD_PARAMS:
+        period = '24h'
+    liq_interval, liq_limit = LIQ_PERIOD_PARAMS[period]
     ticker  = fetch_ticker(symbol)
-    candles = fetch_klines_4h(symbol, 100)
+    candles = fetch_klines(symbol, limit=liq_limit, interval=liq_interval)
     if not ticker or not candles:
         return jsonify({"error": "Failed to fetch data"}), 500
     liq = build_liquidation_zones(candles, ticker["price"])
     liq["open_interest"] = fetch_open_interest(symbol)
     liq["symbol"] = symbol
+    liq["period"] = period
     return jsonify(liq)
+
+@app.route("/api/candles/<symbol>/<interval>")
+def candles_by_interval(symbol, interval):
+    symbol   = symbol.upper()
+    interval = interval.lower()
+    if symbol not in SYMBOLS:
+        return jsonify({"error": "Symbol not supported"}), 400
+    if interval not in VALID_INTERVALS:
+        return jsonify({"error": f"Invalid interval. Use one of: {', '.join(VALID_INTERVALS)}"}), 400
+    rows = fetch_klines(symbol, limit=100, interval=interval)
+    return jsonify(rows)
 
 @app.route("/api/dominance")
 def market_dominance():
@@ -395,33 +428,34 @@ def market_dominance():
 
 @app.route("/api/liquidations_ranking")
 def liquidation_ranking():
-    """Top 10 tokens with liquidation estimates based on volume, OI and volatility."""
+    """Top 20 tokens with liquidation estimates based on volume, OI and volatility."""
+    period = request.args.get('period', '24h')
+    if period not in RANKING_PERIOD_PARAMS:
+        period = '24h'
+    rank_interval, rank_limit = RANKING_PERIOD_PARAMS[period]
+
     ranking = []
     for sym in SYMBOLS:
         ticker = fetch_ticker(sym)
         if not ticker:
             continue
-        candles = fetch_klines(sym, 50)
-        if not candles or len(candles) < 10:
+        candles = fetch_klines(sym, rank_limit, rank_interval)
+        if not candles or len(candles) < 2:
             continue
         oi = fetch_open_interest(sym)
         price = ticker["price"]
 
-        # Estimate liquidation values from volume and volatility
-        highs = [c["high"] for c in candles[-24:]]
-        lows  = [c["low"]  for c in candles[-24:]]
-        vols  = [c["volume"] for c in candles[-24:]]
-        avg_vol = sum(vols) / len(vols) if vols else 0
-        avg_range = sum(h - l for h, l in zip(highs, lows)) / len(highs) if highs else 0
+        highs = [c["high"]   for c in candles]
+        lows  = [c["low"]    for c in candles]
+        vols  = [c["volume"] for c in candles]
+        avg_range      = sum(h - l for h, l in zip(highs, lows)) / len(highs)
         volatility_pct = (avg_range / price * 100) if price > 0 else 0
 
-        # Simulated liq value based on OI * price * volatility factor
-        liq_24h_long  = round(oi * price * volatility_pct * 0.0008, 2)
-        liq_24h_short = round(oi * price * volatility_pct * 0.0006, 2)
-        liq_24h_total = round(liq_24h_long + liq_24h_short, 2)
+        liq_long  = round(oi * price * volatility_pct * 0.0008, 2)
+        liq_short = round(oi * price * volatility_pct * 0.0006, 2)
+        liq_total = round(liq_long + liq_short, 2)
 
-        # Key price levels
-        recent_low  = min(lows) if lows else price * 0.97
+        recent_low  = min(lows)  if lows  else price * 0.97
         recent_high = max(highs) if highs else price * 1.03
 
         ranking.append({
@@ -430,9 +464,9 @@ def liquidation_ranking():
             "change_pct": ticker["change_pct"],
             "open_interest": oi,
             "oi_value_usd": round(oi * price, 2),
-            "liq_24h_long": liq_24h_long,
-            "liq_24h_short": liq_24h_short,
-            "liq_24h_total": liq_24h_total,
+            "liq_24h_long":  liq_long,
+            "liq_24h_short": liq_short,
+            "liq_24h_total": liq_total,
             "volatility_24h": round(volatility_pct, 2),
             "volume_24h": ticker["volume"],
             "support": round(recent_low, 4),
@@ -440,7 +474,7 @@ def liquidation_ranking():
         })
 
     ranking.sort(key=lambda x: x["liq_24h_total"], reverse=True)
-    return jsonify(ranking)
+    return jsonify({"data": ranking, "period": period})
 
 @app.route("/api/news")
 def crypto_news():

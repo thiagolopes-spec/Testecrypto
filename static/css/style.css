@@ -583,6 +583,106 @@ body {
 .reason-icon { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 
 /* =====================================================
+   LIQUIDATION PERIOD SELECTOR
+   ===================================================== */
+.liq-period-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0 10px;
+  flex-wrap: wrap;
+}
+
+.liq-period-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.liq-period-btn:hover {
+  background: var(--surface3);
+  border-color: rgba(255,145,0,0.3);
+  color: var(--orange);
+}
+
+.liq-period-btn.active {
+  background: rgba(255,145,0,0.12);
+  border-color: var(--orange);
+  color: var(--orange);
+  box-shadow: 0 0 8px rgba(255,145,0,0.18);
+}
+
+/* =====================================================
+   TIMEFRAME SELECTOR
+   ===================================================== */
+.tf-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0 10px;
+  flex-wrap: wrap;
+}
+
+.tf-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tf-group + .tf-group {
+  margin-left: 6px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border);
+}
+
+.tf-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-right: 3px;
+  white-space: nowrap;
+}
+
+.tf-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.tf-btn:hover {
+  background: var(--surface3);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.tf-btn.active {
+  background: rgba(196,77,255,0.15);
+  border-color: var(--vivo-bright);
+  color: var(--vivo-bright);
+  box-shadow: 0 0 8px rgba(196,77,255,0.2);
+}
+
+/* =====================================================
    CHART AREAS
    ===================================================== */
 .chart-wrapper   { position: relative; height: 320px; }

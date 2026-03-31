@@ -3,8 +3,17 @@
 // ====================================================
 
 let allData = [];
-let activeSymbol = null;
+let activeSymbol        = null;
+let activeInterval      = '1h';
+let activeLiqMapPeriod  = '24h';
+let activeRankingPeriod = '24h';
 let charts = {};
+
+const TF_GROUPS = [
+  { label: 'Min',  intervals: ['1m', '5m', '15m', '30m'] },
+  { label: 'Hora', intervals: ['1h', '2h', '4h', '6h', '12h'] },
+  { label: 'Dia',  intervals: ['1d'] },
+];
 
 const formatPrice = (v) => {
   if (v >= 1000) return '$' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -125,8 +134,9 @@ function renderDashboard(item) {
         <div class="card-title">
           <div class="card-title-icon">📈</div>
           Gráfico de Preço — <span style="color:var(--vivo-bright);margin-left:4px">${item.symbol.replace('USDT','/USDT')}</span>
-          <span style="margin-left:auto;font-size:9px;color:var(--text-dim)">1H · últimas 60 velas</span>
+          <span id="tfActiveLabel" style="margin-left:auto;font-size:9px;color:var(--text-dim)">${activeInterval.toUpperCase()} · últimas 100 velas</span>
         </div>
+        <div class="tf-bar" id="tfBar">${buildTfBar()}</div>
         <div class="chart-wrapper"><canvas id="candleChart"></canvas></div>
         <div class="rsi-wrapper"><canvas id="rsiChart"></canvas></div>
       </div>
@@ -137,6 +147,7 @@ function renderDashboard(item) {
           <div class="card-title-icon">💥</div>
           Mapa de Liquidações — <span style="color:var(--vivo-bright);margin-left:4px">${item.symbol.replace('USDT','/USDT')}</span>
         </div>
+        <div class="liq-period-bar" id="liqMapPeriodBar">${buildPeriodBar(['4h','8h','12h','24h','3d','7d'], activeLiqMapPeriod)}</div>
         <div id="liqChart"><div style="display:flex;align-items:center;justify-content:center;height:80px"><div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div></div></div>
       </div>
       <div class="card" id="volCard">
@@ -204,8 +215,10 @@ function renderDashboard(item) {
       <div class="card" id="liqRankingCard">
         <div class="card-title">
           <div class="card-title-icon">🏆</div>
-          Ranking de Liquidações — Top 20 Mercado Futuros (24h)
+          Ranking de Liquidações — Top 20 Mercado Futuros
+          <span id="rankingPeriodLabel" style="margin-left:6px;font-size:10px;font-weight:700;color:var(--vivo-bright)">(${activeRankingPeriod})</span>
         </div>
+        <div class="liq-period-bar" id="rankingPeriodBar">${buildPeriodBar(['4h','8h','12h','24h'], activeRankingPeriod)}</div>
         <div id="liqRankingContent">
           <div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text-muted)">
             <div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div>
@@ -229,9 +242,12 @@ function renderDashboard(item) {
   main.appendChild(dash);
 
   renderSignalCard(item);
+  attachTfListeners(item.symbol);
   renderCandleChart(item);
   renderRsiChart(item);
   renderVolMacdChart(item);
+  attachLiqMapPeriodListeners(item.symbol);
+  attachRankingPeriodListeners();
   loadLiquidations(item.symbol);
   loadLiquidationRanking();
   loadNews();
@@ -611,9 +627,10 @@ function renderVolMacdChart(item) {
 // ====================================================
 //  Liquidation Map
 // ====================================================
-async function loadLiquidations(symbol) {
+async function loadLiquidations(symbol, period) {
+  const p = period || activeLiqMapPeriod;
   try {
-    const res = await fetch(`/api/liquidations/${symbol}`);
+    const res  = await fetch(`/api/liquidations/${symbol}?period=${p}`);
     const data = await res.json();
     renderLiquidationChart(data);
   } catch (e) {
@@ -770,20 +787,22 @@ function calcBollinger(data, period = 20, stdDev = 2) {
 // ====================================================
 //  Liquidation Ranking
 // ====================================================
-async function loadLiquidationRanking() {
+async function loadLiquidationRanking(period) {
+  const p   = period || activeRankingPeriod;
   const container = document.getElementById('liqRankingContent');
   if (!container) return;
   try {
-    const res = await fetch('/api/liquidations_ranking');
-    const data = await res.json();
-    renderLiquidationRanking(data, container);
+    const res  = await fetch(`/api/liquidations_ranking?period=${p}`);
+    const json = await res.json();
+    renderLiquidationRanking(json.data || json, container, json.period || p);
   } catch (e) {
     container.innerHTML = '<p style="color:var(--text-muted)">Erro ao carregar ranking</p>';
   }
 }
 
-function renderLiquidationRanking(data, container) {
-  if (!data.length) { container.innerHTML = '<p>Sem dados</p>'; return; }
+function renderLiquidationRanking(data, container, period) {
+  if (!data || !data.length) { container.innerHTML = '<p>Sem dados</p>'; return; }
+  const p = period || activeRankingPeriod;
 
   const totalLong  = data.reduce((a, d) => a + d.liq_24h_long, 0);
   const totalShort = data.reduce((a, d) => a + d.liq_24h_short, 0);
@@ -793,15 +812,15 @@ function renderLiquidationRanking(data, container) {
   let html = `
     <div class="liq-summary-row">
       <div class="liq-summary-box">
-        <div class="liq-summary-label">Total Liquidado (24h)</div>
+        <div class="liq-summary-label">Total Liquidado (${p})</div>
         <div class="liq-summary-value" style="color:var(--vivo-bright)">${formatBig(totalAll)}</div>
       </div>
       <div class="liq-summary-box">
-        <div class="liq-summary-label">Longs Liquidados</div>
+        <div class="liq-summary-label">Longs Liquidados (${p})</div>
         <div class="liq-summary-value" style="color:var(--red)">${formatBig(totalLong)}</div>
       </div>
       <div class="liq-summary-box">
-        <div class="liq-summary-label">Shorts Liquidados</div>
+        <div class="liq-summary-label">Shorts Liquidados (${p})</div>
         <div class="liq-summary-value" style="color:var(--green)">${formatBig(totalShort)}</div>
       </div>
       <div class="liq-summary-box">
@@ -819,9 +838,9 @@ function renderLiquidationRanking(data, container) {
           <th>Token</th>
           <th>Preço</th>
           <th>24h</th>
-          <th>Liq. Long</th>
-          <th>Liq. Short</th>
-          <th>Total Liq.</th>
+          <th>Liq. Long (${p})</th>
+          <th>Liq. Short (${p})</th>
+          <th>Total (${p})</th>
           <th>Barra</th>
           <th>Open Interest</th>
           <th>Volatilidade</th>
@@ -920,6 +939,114 @@ function renderNews(news, container) {
   });
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ====================================================
+//  Period Selectors (Liquidation Map + Ranking)
+// ====================================================
+function buildPeriodBar(options, activePeriod) {
+  return options.map(p => `
+    <button class="liq-period-btn${p === activePeriod ? ' active' : ''}" data-period="${p}">${p}</button>
+  `).join('');
+}
+
+function attachLiqMapPeriodListeners(symbol) {
+  const bar = document.getElementById('liqMapPeriodBar');
+  if (!bar) return;
+  bar.querySelectorAll('.liq-period-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const period = btn.dataset.period;
+      if (period === activeLiqMapPeriod) return;
+      activeLiqMapPeriod = period;
+      bar.querySelectorAll('.liq-period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Show loading state
+      const liqEl = document.getElementById('liqChart');
+      if (liqEl) liqEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:80px"><div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div></div>';
+      loadLiquidations(symbol, period);
+    });
+  });
+}
+
+function attachRankingPeriodListeners() {
+  const bar = document.getElementById('rankingPeriodBar');
+  if (!bar) return;
+  bar.querySelectorAll('.liq-period-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const period = btn.dataset.period;
+      if (period === activeRankingPeriod) return;
+      activeRankingPeriod = period;
+      bar.querySelectorAll('.liq-period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      // Update label in card title
+      const lbl = document.getElementById('rankingPeriodLabel');
+      if (lbl) lbl.textContent = `(${period})`;
+      // Show loading state
+      const content = document.getElementById('liqRankingContent');
+      if (content) content.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:80px"><div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div></div>';
+      loadLiquidationRanking(period);
+    });
+  });
+}
+
+// ====================================================
+//  Timeframe Selector
+// ====================================================
+function buildTfBar() {
+  return TF_GROUPS.map(g => `
+    <div class="tf-group">
+      <span class="tf-group-label">${g.label}</span>
+      ${g.intervals.map(iv => `
+        <button class="tf-btn${iv === activeInterval ? ' active' : ''}" data-interval="${iv}">${iv}</button>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function attachTfListeners(symbol) {
+  const bar = document.getElementById('tfBar');
+  if (!bar) return;
+  bar.querySelectorAll('.tf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const iv = btn.dataset.interval;
+      if (iv === activeInterval) return;
+      activeInterval = iv;
+
+      // Update active state visually
+      bar.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const label = document.getElementById('tfActiveLabel');
+      if (label) label.textContent = `${iv.toUpperCase()} · últimas 100 velas`;
+
+      loadCandlesForInterval(symbol, iv);
+    });
+  });
+}
+
+async function loadCandlesForInterval(symbol, interval) {
+  // Show loading state on charts
+  const chartWrap = document.querySelector('#candleCard .chart-wrapper');
+  const rsiWrap   = document.querySelector('#candleCard .rsi-wrapper');
+  if (chartWrap) chartWrap.style.opacity = '0.4';
+  if (rsiWrap)   rsiWrap.style.opacity   = '0.4';
+
+  try {
+    const res     = await fetch(`/api/candles/${symbol}/${interval}`);
+    const candles = await res.json();
+    if (!Array.isArray(candles) || candles.length < 10) return;
+
+    if (charts.candle) { charts.candle.destroy(); delete charts.candle; }
+    if (charts.rsi)    { charts.rsi.destroy();    delete charts.rsi;    }
+
+    const fakeItem = { candles, symbol };
+    renderCandleChart(fakeItem);
+    renderRsiChart(fakeItem);
+  } catch (e) {
+    console.error('Erro ao carregar candles:', e);
+  } finally {
+    if (chartWrap) chartWrap.style.opacity = '1';
+    if (rsiWrap)   rsiWrap.style.opacity   = '1';
+  }
 }
 
 // ====================================================
