@@ -613,6 +613,152 @@ body {
 }
 
 /* =====================================================
+   LIQUIDATION HEATMAP
+   ===================================================== */
+.liq-heatmap-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.liq-heatmap-header {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap: 4px;
+  padding: 8px 0 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.liq-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.liq-hdr.center { justify-content: center; color: var(--text-dim); }
+.liq-hdr.long   { justify-content: flex-end; }
+.liq-hdr-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.liq-hdr-hint {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text-dim);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.liq-heatmap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.liq-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap: 4px;
+  align-items: center;
+  height: 20px;
+  border-radius: 3px;
+  transition: background var(--transition);
+}
+.liq-row:hover { background: rgba(196,77,255,0.05); }
+.liq-row-current {
+  background: rgba(196,77,255,0.08) !important;
+  border: 1px solid rgba(196,77,255,0.25);
+  border-radius: 4px;
+  height: 26px;
+}
+
+.liq-col-short,
+.liq-col-long {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  overflow: hidden;
+}
+.liq-col-short { flex-direction: row-reverse; }
+
+.liq-bar-wrap {
+  flex: 1;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.liq-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  min-width: 2px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+.liq-val {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 26px;
+}
+
+.liq-price-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.liq-price-label.above { color: var(--green); opacity: 0.7; }
+.liq-price-label.below { color: var(--red);   opacity: 0.7; }
+.liq-price-label.current {
+  color: var(--vivo-bright);
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 1;
+}
+
+.price-arrow {
+  color: var(--vivo-bright);
+  font-size: 9px;
+}
+
+.liq-now-badge {
+  background: var(--vivo);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  font-family: var(--font);
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.liq-heatmap-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* =====================================================
    LIQUIDATION RANKING
    ===================================================== */
 .liq-summary-row {

@@ -137,11 +137,7 @@ function renderDashboard(item) {
           <div class="card-title-icon">💥</div>
           Mapa de Liquidações — <span style="color:var(--vivo-bright);margin-left:4px">${item.symbol.replace('USDT','/USDT')}</span>
         </div>
-        <div class="liq-chart-wrapper"><canvas id="liqChart"></canvas></div>
-        <div class="liq-legend">
-          <div class="liq-legend-item"><div class="liq-dot" style="background:#ff1744"></div> Longs liquidados (queda de preço)</div>
-          <div class="liq-legend-item"><div class="liq-dot" style="background:#00e676"></div> Shorts liquidados (subida de preço)</div>
-        </div>
+        <div id="liqChart"><div style="display:flex;align-items:center;justify-content:center;height:80px"><div class="loading-bar-wrap" style="width:120px"><div class="loading-bar"></div></div></div></div>
       </div>
       <div class="card" id="volCard">
         <div class="card-title">
@@ -573,113 +569,81 @@ async function loadLiquidations(symbol) {
 }
 
 function renderLiquidationChart(data) {
-  const ctx = document.getElementById('liqChart');
-  if (!ctx) return;
-
-  const prices = data.prices;
-  const longs = data.long_liquidations;
-  const shorts = data.short_liquidations;
+  const prices  = data.prices;
+  const longs   = data.long_liquidations;
+  const shorts  = data.short_liquidations;
   const current = data.current_price;
+  const n       = prices.length;
 
-  // Find current price index for annotation
-  let closestIdx = 0;
-  let minDist = Infinity;
+  // Find index closest to current price
+  let closestIdx = 0, minDist = Infinity;
   prices.forEach((p, i) => {
     const d = Math.abs(p - current);
     if (d < minDist) { minDist = d; closestIdx = i; }
   });
 
-  charts.liq = new Chart(ctx.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: prices.map(p => formatPrice(p)),
-      datasets: [
-        {
-          label: 'Liquidações Long',
-          data: longs,
-          backgroundColor: prices.map((p, i) => {
-            const intensity = longs[i] / 100;
-            return `rgba(255,23,68,${0.2 + intensity * 0.7})`;
-          }),
-          borderColor: 'rgba(255,23,68,0.8)',
-          borderWidth: prices.map((_, i) => i === closestIdx ? 2 : 0),
-          borderSkipped: false,
-        },
-        {
-          label: 'Liquidações Short',
-          data: shorts,
-          backgroundColor: prices.map((p, i) => {
-            const intensity = shorts[i] / 100;
-            return `rgba(0,230,118,${0.2 + intensity * 0.7})`;
-          }),
-          borderColor: 'rgba(0,230,118,0.8)',
-          borderWidth: 0,
-          borderSkipped: false,
-        }
-      ]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#111827', borderColor: '#1e3050', borderWidth: 1,
-          titleColor: '#e2e8f0', bodyColor: '#94a3b8',
-          callbacks: {
-            title: (items) => `Preço: ${items[0].label}`,
-            label: (item) => `${item.dataset.label}: ${item.raw.toFixed(1)}%`,
-          }
-        },
-        annotation: {
-          annotations: {
-            currentPrice: {
-              type: 'line',
-              yMin: closestIdx,
-              yMax: closestIdx,
-              borderColor: '#ffd740',
-              borderWidth: 2,
-              borderDash: [6, 3],
-              label: {
-                display: true,
-                content: `Preço Atual: ${formatPrice(current)}`,
-                backgroundColor: '#ffd740',
-                color: '#0a0e1a',
-                font: { weight: 'bold', size: 11 },
-                position: 'end',
-              }
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          stacked: false,
-          grid: { color: 'rgba(61,31,110,0.4)' },
-          ticks: {
-            color: '#64748b',
-            font: { size: 10 },
-            callback: v => v + '%'
-          }
-        },
-        y: {
-          stacked: false,
-          grid: { color: 'rgba(61,31,110,0.2)' },
-          ticks: {
-            color: (ctx) => {
-              if (ctx.index === closestIdx) return '#c44dff';
-              return '#5a3a7a';
-            },
-            font: (ctx) => ({
-              size: ctx.index === closestIdx ? 12 : 10,
-              weight: ctx.index === closestIdx ? 'bold' : 'normal',
-            }),
-            maxTicksLimit: 20,
-          }
-        }
-      }
-    }
+  // Replace canvas wrapper with heatmap
+  const oldCanvas = document.getElementById('liqChart');
+  if (!oldCanvas) return;
+  const container = oldCanvas.parentElement;
+
+  const maxLong  = Math.max(...longs,  0.1);
+  const maxShort = Math.max(...shorts, 0.1);
+
+  // Sample 22 rows, always include current price
+  const step = Math.max(1, Math.floor(n / 22));
+  const idxSet = new Set();
+  for (let i = 0; i < n; i += step) idxSet.add(i);
+  idxSet.add(closestIdx);
+  const indices = [...idxSet].sort((a, b) => b - a); // high → low
+
+  let rows = '';
+  indices.forEach(i => {
+    const price     = prices[i];
+    const longVal   = longs[i];
+    const shortVal  = shorts[i];
+    const isCurrent = i === closestIdx;
+    const longPct   = (longVal  / maxLong)  * 100;
+    const shortPct  = (shortVal / maxShort) * 100;
+    const longAlpha  = 0.12 + (longVal  / maxLong)  * 0.78;
+    const shortAlpha = 0.12 + (shortVal / maxShort) * 0.78;
+
+    rows += `
+      <div class="liq-row${isCurrent ? ' liq-row-current' : ''}">
+        <div class="liq-col-short">
+          <span class="liq-val">${shortVal > 8 ? shortVal.toFixed(0) + '%' : ''}</span>
+          <div class="liq-bar-wrap">
+            <div class="liq-bar-fill" style="width:${shortPct}%;background:rgba(0,230,118,${shortAlpha});margin-left:auto"></div>
+          </div>
+        </div>
+        <div class="liq-price-label${isCurrent ? ' current' : price > current ? ' above' : ' below'}">
+          ${isCurrent ? `<span class="price-arrow">▶</span>` : ''}
+          <span>${formatPrice(price)}</span>
+          ${isCurrent ? `<span class="liq-now-badge">AGORA</span>` : ''}
+        </div>
+        <div class="liq-col-long">
+          <div class="liq-bar-wrap">
+            <div class="liq-bar-fill" style="width:${longPct}%;background:rgba(255,23,68,${longAlpha})"></div>
+          </div>
+          <span class="liq-val">${longVal > 8 ? longVal.toFixed(0) + '%' : ''}</span>
+        </div>
+      </div>`;
   });
+
+  container.innerHTML = `
+    <div class="liq-heatmap-wrap">
+      <div class="liq-heatmap-header">
+        <div class="liq-hdr short"><span class="liq-hdr-dot" style="background:var(--green)"></span>Shorts Liquidados <span class="liq-hdr-hint">preço sobe ↑</span></div>
+        <div class="liq-hdr center">Nível de Preço</div>
+        <div class="liq-hdr long">Longs Liquidados <span class="liq-hdr-hint">preço cai ↓</span><span class="liq-hdr-dot" style="background:var(--red)"></span></div>
+      </div>
+      <div class="liq-heatmap">${rows}</div>
+      <div class="liq-heatmap-footer">
+        Preço atual: <strong style="color:var(--vivo-bright)">${formatPrice(current)}</strong>
+        &nbsp;·&nbsp; Intensidade da barra = concentração de liquidações naquele nível
+      </div>
+    </div>
+  `;
 }
 
 // ====================================================
@@ -777,7 +741,7 @@ function renderLiquidationRanking(data, container) {
     <div class="liq-summary-row">
       <div class="liq-summary-box">
         <div class="liq-summary-label">Total Liquidado (24h)</div>
-        <div class="liq-summary-value" style="color:var(--accent)">${formatBig(totalAll)}</div>
+        <div class="liq-summary-value" style="color:var(--vivo-bright)">${formatBig(totalAll)}</div>
       </div>
       <div class="liq-summary-box">
         <div class="liq-summary-label">Longs Liquidados</div>
